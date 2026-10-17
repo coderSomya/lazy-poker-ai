@@ -1,34 +1,47 @@
 # Lazy Poker AI - Single Config File
-# All LLM players and game settings are configured here.
-
-openRouter:
-  apiKey: "${OPENROUTER_API_KEY}"
-  baseUrl: "https://openrouter.ai/api/v1"
+# Each player uses its provider's native API key from .env.
 
 players:
   - id: claude-sonnet
     name: "Claude Sonnet 4.5"
-    model: "anthropic/claude-sonnet-4-5"
+    provider: "anthropic"
+    model: "claude-sonnet-4-5"
     enabled: true
 
   - id: gpt-4o
     name: "GPT-4o"
-    model: "openai/gpt-4o"
+    provider: "openai"
+    model: "gpt-4o"
     enabled: true
 
   - id: gpt-4o-mini
     name: "GPT-4o Mini"
-    model: "openai/gpt-4o-mini"
+    provider: "openai"
+    model: "gpt-4o-mini"
     enabled: true
 
-  - id: gemini-pro-1.5
-    name: "Gemini 1.5 Pro"
-    model: "google/gemini-pro-1.5"
+  - id: mistral-small
+    name: "Mistral Small"
+    provider: "mistral"
+    model: "mistral-small-latest"
     enabled: false
 
-  - id: llama-3.1-70b
-    name: "Llama 3.1 70B"
-    model: "meta-llama/llama-3.1-70b-instruct"
+  - id: qwen-plus
+    name: "Qwen Plus"
+    provider: "qwen"
+    model: "qwen-plus"
+    enabled: false
+
+  - id: glm-4
+    name: "GLM-4"
+    provider: "glm"
+    model: "glm-4"
+    enabled: false
+
+  - id: kimi-k2
+    name: "Kimi K2"
+    provider: "kimi"
+    model: "kimi-k2-0711-preview"
     enabled: false
 
 simulation:

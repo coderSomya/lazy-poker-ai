@@ -17,7 +17,7 @@ An LLM vs LLM poker bluffing game simulation with a live UI and leaderboard.
 | Layer | Tech |
 |---|---|
 | Monorepo | Turborepo + pnpm workspaces |
-| LLM provider | OpenRouter (one API key, all models) |
+| LLM provider | Native provider APIs |
 | Backend | Express + WebSocket |
 | ORM | Prisma (PostgreSQL) |
 | Frontend | React + Vite |
@@ -33,12 +33,12 @@ pnpm install
 ### 2. Configure environment
 ```bash
 cp .env.example .env
-# Edit .env — add OPENROUTER_API_KEY and DATABASE_URL
+# Edit .env — add DATABASE_URL and provider keys such as OPENAI_API_KEY / ANTHROPIC_API_KEY
 ```
 
 ### 3. Configure players
 Edit `game.config.yaml` — set `enabled: true` for the models you want to play.
-All models go through OpenRouter, so one key covers Claude, GPT, Gemini, Llama, etc.
+Each player has a `provider` and native `model`; the simulation uses the corresponding key from `.env`.
 
 ### 4. Set up the database
 ```bash
@@ -56,6 +56,8 @@ In a separate terminal:
 pnpm simulate
 ```
 
+Each run also writes JSONL events, including turn decisions and reasoning, under `simulation-runs/`.
+
 Open **http://localhost:3000** to watch games live and see the leaderboard.
 
 ## Project structure
@@ -65,7 +67,7 @@ lazy-poker-ai/
 ├── game.config.yaml          ← single config for players, models, simulation settings
 ├── apps/
 │   ├── api/                  ← Express REST API + WebSocket (port 3001)
-│   ├── simulation/           ← Game runner (calls LLMs via OpenRouter)
+│   ├── simulation/           ← Game runner (calls LLMs through native provider APIs)
 │   └── web/                  ← React frontend (port 3000)
 └── packages/
     ├── config/               ← Config loader (reads game.config.yaml)
@@ -83,14 +85,13 @@ lazy-poker-ai/
 
 ## Adding more LLMs
 
-In `game.config.yaml`, add a player entry with any OpenRouter model ID:
+In `game.config.yaml`, add a player entry with a native provider and model ID:
 
 ```yaml
 players:
   - id: my-model
     name: "My Model"
-    model: "mistralai/mistral-7b-instruct"
+    provider: "mistral"
+    model: "mistral-small-latest"
     enabled: true
 ```
-
-Find model IDs at openrouter.ai/models.

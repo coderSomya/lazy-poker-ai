@@ -8,15 +8,12 @@ dotenv.config();
 export interface PlayerConfig {
   id: string;
   name: string;
+  provider: 'openai' | 'anthropic' | 'mistral' | 'qwen' | 'glm' | 'kimi';
   model: string;
   enabled: boolean;
 }
 
 export interface GameConfig {
-  openRouter: {
-    apiKey: string;
-    baseUrl: string;
-  };
   players: PlayerConfig[];
   simulation: {
     gamesPerRun: number;

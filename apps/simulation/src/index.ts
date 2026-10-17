@@ -1,11 +1,25 @@
 import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
 import { config, getEnabledPlayers } from '@lazy-poker/config';
 import { runGame } from './game-runner';
 import { ensurePlayers, createGameRecord, recordSet, finalizeGame } from './reporter';
 
 const API_HOST = process.env.API_HOST ?? 'http://localhost:3001';
+const runStartedAt = new Date();
+const runLogDir = path.resolve(process.cwd(), 'simulation-runs');
+const runLogPath = path.join(
+  runLogDir,
+  `run-${runStartedAt.toISOString().replace(/[:.]/g, '-')}.jsonl`
+);
+
+function writeRunLog(event: unknown): void {
+  fs.mkdirSync(runLogDir, { recursive: true });
+  fs.appendFileSync(runLogPath, `${JSON.stringify({ at: new Date().toISOString(), ...event as object })}\n`);
+}
 
 async function postEvent(event: unknown): Promise<void> {
+  writeRunLog(event);
   try {
     await fetch(`${API_HOST}/api/simulation/events`, {
       method: 'POST',
@@ -29,7 +43,8 @@ async function main(): Promise<void> {
   }
 
   console.log(`Starting ${config.simulation.gamesPerRun} game(s) with ${players.length} players:`);
-  players.forEach((p) => console.log(`  - ${p.name} (${p.model})`));
+  console.log(`Writing local action log to: ${runLogPath}`);
+  players.forEach((p) => console.log(`  - ${p.name} (${p.provider}:${p.model})`));
 
   await ensurePlayers(players);
 

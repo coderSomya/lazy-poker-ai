@@ -11,11 +11,13 @@ import { buildSystemPrompt, buildTurnPrompt } from './prompts';
 const SYSTEM_PROMPT = buildSystemPrompt();
 const { maxBidsPerSet, delayBetweenTurnsMs } = config.simulation;
 
+type RuntimePlayer = Player & { config: PlayerConfig };
+
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function initPlayers(playerConfigs: PlayerConfig[]): Player[] {
+function initPlayers(playerConfigs: PlayerConfig[]): RuntimePlayer[] {
   return playerConfigs.map((p) => ({
     id: p.id,
     name: p.name,
@@ -23,13 +25,14 @@ function initPlayers(playerConfigs: PlayerConfig[]): Player[] {
     cardCount: 1,
     cards: [],
     isEliminated: false,
+    config: p,
   }));
 }
 
 type EventCallback = (e: unknown) => Promise<void> | void;
 
 async function runSet(
-  players: Player[],
+  players: RuntimePlayer[],
   setNumber: number,
   onEvent: EventCallback
 ): Promise<{ result: import('@lazy-poker/game-engine').SetResult; bidHistory: BidEntry[] }> {
@@ -88,7 +91,7 @@ async function runSet(
           validNextBidIds,
         });
 
-        const raw = await callLLM(player.model, [
+        const raw = await callLLM(player.config, [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userMsg },
         ]);
@@ -120,7 +123,18 @@ async function runSet(
     };
     bidHistory.push(entry);
 
-    await onEvent({ type: 'turn', setNumber, player: player.name, action, bid: entry.bid?.display, reasoning });
+    await onEvent({
+      type: 'turn',
+      setNumber,
+      player: player.name,
+      playerId: player.id,
+      provider: player.config.provider,
+      model: player.model,
+      action,
+      bid: entry.bid?.display,
+      bidId: entry.bid?.id,
+      reasoning,
+    });
 
     if (action === 'check') {
       const lastRaise = [...bidHistory].reverse().find((e) => e.action === 'raise');
@@ -202,7 +216,11 @@ export async function runGame(
     startedAt: Date.now(),
   };
 
-  await onEvent({ type: 'game-start', gameId, players: players.map((p) => ({ id: p.id, name: p.name, model: p.model })) });
+  await onEvent({
+    type: 'game-start',
+    gameId,
+    players: players.map((p) => ({ id: p.id, name: p.name, provider: p.config.provider, model: p.model })),
+  });
 
   let setNumber = 0;
 
