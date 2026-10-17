@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PlayerProfile {
+  id        String   @id  // matches config player id
+  name      String
+  model     String
+  createdAt DateTime @default(now())
+
+  gamePlayers GamePlayer[]
+  stats       PlayerStats?
+}
+
+model PlayerStats {
+  id               String        @id @default(cuid())
+  playerId         String        @unique
+  player           PlayerProfile @relation(fields: [playerId], references: [id])
+  gamesPlayed      Int           @default(0)
+  gamesWon         Int           @default(0)
+  gamesLost        Int           @default(0)
+  setsPlayed       Int           @default(0)
+  setsWon          Int           @default(0)
+  setsLost         Int           @default(0)
+  bluffsAttempted  Int           @default(0)
+  bluffsCaught     Int           @default(0)
+  bluffsSucceeded  Int           @default(0)
+  checksCorrect    Int           @default(0)
+  checksIncorrect  Int           @default(0)
+  totalBidsMade    Int           @default(0)
+  updatedAt        DateTime      @updatedAt
+}
+
+model Game {
+  id          String       @id @default(cuid())
+  status      String       @default("in-progress") // in-progress | finished
+  startedAt   DateTime     @default(now())
+  finishedAt  DateTime?
+  winnerId    String?
+  loserId     String?
+
+  gamePlayers GamePlayer[]
+  sets        GameSet[]
+}
+
+model GamePlayer {
+  id       String        @id @default(cuid())
+  gameId   String
+  playerId String
+  game     Game          @relation(fields: [gameId], references: [id])
+  player   PlayerProfile @relation(fields: [playerId], references: [id])
+  finalCardCount Int    @default(0)
+
+  @@unique([gameId, playerId])
+}
+
+model GameSet {
+  id         String   @id @default(cuid())
+  gameId     String
+  setNumber  Int
+  game       Game     @relation(fields: [gameId], references: [id])
+  loserId    String?
+  winnerId   String?
+  finalBidId String?
+  bidValid   Boolean?
+  bluffCaught Boolean?
+  createdAt  DateTime @default(now())
+
+  bids       SetBid[]
+  cardCounts SetCardCount[]
+}
+
+model SetBid {
+  id         String   @id @default(cuid())
+  setId      String
+  set        GameSet  @relation(fields: [setId], references: [id])
+  playerId   String
+  playerName String
+  action     String   // raise | check
+  bidId      String?
+  bidDisplay String?
+  createdAt  DateTime @default(now())
+}
+
+model SetCardCount {
+  id       String  @id @default(cuid())
+  setId    String
+  set      GameSet @relation(fields: [setId], references: [id])
+  playerId String
+  count    Int
+}

@@ -1,0 +1,17 @@
+{
+  "name": "lazy-poker-ai",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "simulate": "turbo run start --filter=@lazy-poker/simulation",
+    "db:push": "turbo run db:push --filter=@lazy-poker/database",
+    "db:generate": "turbo run db:generate --filter=@lazy-poker/database"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.9.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
